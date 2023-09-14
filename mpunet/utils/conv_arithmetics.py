@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def expand_to_dim(values, dim):
     expanded = []
     for v in values:
@@ -13,7 +12,6 @@ def expand_to_dim(values, dim):
         expanded.append(np.array(v))
     return expanded
 
-
 def output_features(in_filter_size, padding, kernel_size, stride=1, dim=2):
     print("")
     in_filter_size, padding, kernel_size, stride = expand_to_dim([in_filter_size,
@@ -22,24 +20,21 @@ def output_features(in_filter_size, padding, kernel_size, stride=1, dim=2):
                                                                   stride],
                                                                  dim=dim)
 
-    return np.floor((in_filter_size + (2*padding) - kernel_size)/stride).astype(np.int) + 1
-
+    return np.floor((in_filter_size + (2*padding) - kernel_size)/stride).astype(int) + 1
 
 def output_feature_distance(input_feature_distance, stride, dim=2):
     input_feature_distance, stride = expand_to_dim([input_feature_distance,
                                                     stride], dim=dim)
     return input_feature_distance * stride
 
-
 def output_receptive_field(input_receptive_field, kernel_size,
-                           input_feature_distacne, dim=2):
+                           input_feature_distance, dim=2):
     input_receptive_field, kernel_size, \
-    input_feature_distacne = expand_to_dim([input_receptive_field,
+    input_feature_distance = expand_to_dim([input_receptive_field,
                                             kernel_size,
-                                            input_feature_distacne],
+                                            input_feature_distance],
                                            dim=dim)
-    return input_receptive_field + (kernel_size - 1) * input_feature_distacne
-
+    return input_receptive_field + (kernel_size - 1) * input_feature_distance
 
 def output_first_feature_center(input_first_feature_center, kernel_size,
                                 padding, input_feature_distance, dim=2):
@@ -52,7 +47,6 @@ def output_first_feature_center(input_first_feature_center, kernel_size,
                                            dim=dim)
 
     return input_first_feature_center + ((kernel_size-1)/2 - padding) * input_feature_distance
-
 
 def compute_receptive_fields(layers, verbose=False):
     input_ = layers[0]
@@ -74,15 +68,15 @@ def compute_receptive_fields(layers, verbose=False):
                 # Pooling layer?
                 kernel_size = layer.pool_size
             except AttributeError:
-                # Batch norm, flatten etc.
+                # Batch norm, flatten, etc.
                 continue
         kernel_size = np.array(kernel_size)
 
         # Get potential dilation rates
         try:
-            dilation = np.array(layer.dilation_rate).astype(np.int)
+            dilation = np.array(layer.dilation_rate).astype(int)
         except AttributeError:
-            dilation = np.ones(shape=[dim], dtype=np.int)
+            dilation = np.ones(shape=[dim], dtype=int)
         if hasattr(layer, "dilations"):
             assert (dilation == 1).all()
             dilation = np.array(layer.dilations)
@@ -113,3 +107,4 @@ def compute_receptive_fields(layers, verbose=False):
             print("Receptive field:".ljust(25), receptive_field)
 
     return values
+
