@@ -16,10 +16,6 @@ from mpunet.logging import ScreenLogger
 
 
 class ImagePairLoader(object):
-    """
-    ImagePair data loader object
-    Represents a collection of ImagePairs
-    """
     def __init__(self,
                  base_dir="./",
                  img_subdir="images",
@@ -32,70 +28,22 @@ class ImagePairLoader(object):
                  no_log=False,
                  identifier=None,
                  **kwargs):
-        """
-        Initializes the ImagePairLoader object from all .nii files in a folder
-        or pair of folders if labels are also specified.
-
-        If initialize_empty=False, the following actions are taken immediately
-        on initialization:
-            - All .nii/.nii.gz image files are found in base_dir/img_subdir
-            - Unless predict_mode=True, finds all .nii/.nii.gz label files in
-              base_dir/label_subdir
-            - ImagePair objects are established for all images/image-label
-              pairs. Not that since ImagePairs do not eagerly load data,
-              the ImagePairLoader also does not immediately load data into mem
-
-        If initialize_empty=True, the class is initialized but no images are
-        loaded. Images can be manually added through the add_image and
-        add_files methods.
-
-        Args:
-            base_dir:           A path to a directory storing the 'img_subdir'
-                                and 'label_subdir' sub-folders
-            img_subdir:         Name of sub-folder storing .nii images files
-            label_subdir:       Name of sub-folder storing .nii labels files
-            logger:             mpunet logger object
-            sample_weight:      A float giving a global sample weight assigned
-                                to all images loaded by the ImagePairLoader
-            bg_class            Background class integer to pass to all
-                                ImagePair objects. Usually int(0).
-            predict_mode:       Boolean whether labels exist for the images.
-                                If True, the labels are assumed stored in the
-                                label_subdir with names identical to the images
-            initialize_empty:   Boolean, if True do not load any images at init
-                                This may be useful for manually assigning
-                                individual image files to the object.
-            no_log:             Boolean, whether to not log to screen/file
-            identifier:         Optional name for the dataset
-            **kwargs:           Other keywords arguments
-        """
         self.logger = logger if logger is not None else ScreenLogger()
-
-        # Set absolute paths to main folder, image folder and label folder
         self.data_dir = Path(base_dir).absolute()
         self.images_path = self.data_dir / img_subdir
         self.identifier = self.data_dir.name
-
-        # Labels included?
         self.predict_mode = predict_mode or not label_subdir
         if not predict_mode:
             self.labels_path = self.data_dir / label_subdir
         else:
             self.labels_path = None
 
-        # Load images unless initialize_empty is specified
         if not initialize_empty:
-            # Get paths to all images
             self.image_paths = self.get_image_paths()
-
             if not predict_mode:
-                # Get paths to labels if included
-                self.label_paths = self.get_label_paths(img_subdir,
-                                                        label_subdir)
+                self.label_paths = self.get_label_paths(img_subdir, label_subdir)
             else:
                 self.label_paths = None
-
-            # Load all nii objects
             self.images = self.get_image_objects(sample_weight, bg_class)
         else:
             self.images = []
@@ -197,7 +145,7 @@ class ImagePairLoader(object):
                     returned.append(image)
                     yield image
 
-    def _get_paths_from_list_file(self, base_path, fname="LIST_OF_FILES.txt"):
+    '''def _get_paths_from_list_file(self, base_path, fname="LIST_OF_FILES.txt"):
         """
         Loads a set of paths pointing to .nii files in 'base_path'.
         This method is used in the rare cases that images are not directly
@@ -227,7 +175,7 @@ class ImagePairLoader(object):
         else:
             raise OSError("File '%s' does not exist. Did you specify "
                           "the correct img_subdir?" % list_file_path)
-        return images
+        return images'''
 
     def get_image_paths(self):
         """
@@ -236,11 +184,7 @@ class ImagePairLoader(object):
         Returns:
             A list of pathlib.Path
         """
-        images = sorted(glob.glob(str(self.images_path / "*.nii*")))
-        if not images:
-            # Try to load from a file listing paths at the location
-            # This is sometimes a format created by the cv_split.py script
-            images = self._get_paths_from_list_file(self.images_path)
+        images = sorted(glob.glob(str(self.images_path / ".nii.gz")))
         return [Path(p) for p in images]
 
     def get_label_paths(self, img_subdir, label_subdir):
